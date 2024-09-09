@@ -1,0 +1,63 @@
+body {
+  margin: 0;
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  background-color: #faf5ff;
+}
+
+.navbar-nav li a {
+  color: #181818 !important;
+}
+.navbar-nav li a:hover {
+  color: #674636 !important;
+}
+.bg-purple {
+  background: #674636 !important;
+}
+
+.bg-login {
+  background: #fff8e8 !important;
+}
+.btn-purple {
+  background: #AAB396!important;
+  color: #030303 !important;
+}
+.btn-purple:hover {
+  background: #F7EED3 !important;
+  color: #AAB396 !important;
+  border: 1px solid #7952b344;
+}
+.btn-purple-light {
+  background: #fff !important;
+  color: #AAB396 !important;
+  border: 1px solid #7952b344;
+}
+.btn-purple-light:hover {
+  background: #AAB396!important;
+  color: #fff !important;
+  border: 1px solid #AAB396;
+}
+.thead-purple {
+  background: #AAB396!important;
+  color: #fff !important;
+}
+.text-purple {
+  color:  #674636!important;
+}
+.form-control-user {
+  border-radius: 50px;
+}
+.border-0 {
+  border: 0px !important;
+}
+.bg-0 {
+  background: transparent !important;
+}
+
+.navbar-nav li a.putih {
+  color: #f1f8ff !important;
+}
+.navbar-nav li a.putih:hover {
+  color: #ffffff !important;
+}
