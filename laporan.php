@@ -1,18 +1,91 @@
 <?php include 'template/header.php';?>
 <?php
-            function format_ribuan ($nilai){
-                return number_format ($nilai, 0, ',', '.');
-            }
-                $query = mysqli_query($conn, "SELECT * FROM laporanku");
-                $total = 0;
-                $tot_bayar = 0;
-                $no = 1;
-                while ($r = $query->fetch_assoc()) {
-                $total = $r['harga_barang'] * $r['quantity'];
-                $tot_bayar += $total; }
-                ?>
+// Fungsi format ribuan
+function format_ribuan($nilai) {
+    return number_format($nilai, 0, ',', '.');
+}
+
+// Filter tanggal jika ada
+$filter_date = '';
+$where_clause = '';
+if (isset($_GET['tanggal']) && !empty($_GET['tanggal'])) {
+    $filter_date = $_GET['tanggal'];
+    $where_clause = "WHERE DATE(created_at) = '$filter_date'";
+}
+
+// Query untuk laporan
+$query = mysqli_query($conn, "SELECT *, DATE(created_at) as tanggal_transaksi FROM laporanku $where_clause ORDER BY created_at DESC");
+
+// Hitung total pendapatan
+$query_total = mysqli_query($conn, "SELECT 
+    SUM(subtotal) as total_pendapatan,
+    SUM(quantity) as total_item,
+    COUNT(DISTINCT no_transaksi) as total_transaksi
+    FROM laporanku $where_clause");
+$total_data = mysqli_fetch_assoc($query_total);
+$total_pendapatan = $total_data['total_pendapatan'] ?? 0;
+$total_item = $total_data['total_item'] ?? 0;
+$total_transaksi = $total_data['total_transaksi'] ?? 0;
+?>
   <div class="col-md-9 mb-2">
     <div class="row">
+    
+    <!-- Summary Cards -->
+    <div class="col-md-12 mb-3">
+        <div class="row">
+            <div class="col-md-3 mb-2">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h4><?php echo $total_transaksi; ?></h4>
+                        <small>Total Transaksi</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-2">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h4><?php echo $total_item; ?></h4>
+                        <small>Total Item Terjual</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-2">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h4>Rp <?php echo format_ribuan($total_pendapatan); ?></h4>
+                        <small>Total Pendapatan<?php echo $filter_date ? ' - ' . date('d F Y', strtotime($filter_date)) : ''; ?></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="col-md-12 mb-3">
+        <div class="card">
+            <div class="card-body py-2">
+                <form method="GET" class="row align-items-center">
+                    <div class="col-md-4">
+                        <label class="small">Filter Tanggal:</label>
+                        <input type="date" name="tanggal" class="form-control form-control-sm" 
+                               value="<?php echo $filter_date; ?>">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="small">&nbsp;</label><br>
+                        <button type="submit" class="btn btn-purple btn-sm mr-2">
+                            <i class="fa fa-filter"></i> Filter
+                        </button>
+                        <a href="laporan.php" class="btn btn-secondary btn-sm">
+                            <i class="fa fa-refresh"></i> Reset
+                        </a>
+                        <button type="button" class="btn btn-success btn-sm ml-2" onclick="exportToExcel()">
+                            <i class="fa fa-file-excel"></i> Export Excel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- table barang -->
     <div class="col-md-12 mb-2">
@@ -25,41 +98,50 @@
                         <thead class="thead-purple">
                             <tr>
                             <th>No</th>
-                            <th>Kode Barang</th>
-                            <th>Tgl Input</th>
-                            <th>Nama Barang</th>
-                            <th>Quantity</th>
-                            <th>Harga</th>
+                            <th>No. Transaksi</th>
+                            <th>Tanggal</th>
+                            <th>Kode Item</th>
+                            <th>Nama Item</th>
+                            <th>Qty</th>
+                            <th>Harga Satuan</th>
                             <th>Sub-Total</th>
-                            <th>Opsi</th>
+                            <th>Total Bayar</th>
+                            <th>Kembalian</th>
                             </tr>
                         </thead>
                         <tbody>
                         <?php 
                         $no = 1;
-                        $data_barang = mysqli_query($conn,"SELECT * FROM laporanku ");
-                        while($d = mysqli_fetch_array($data_barang)){
-                            ?>
-                        <tr>
-                            <td><?php echo $no++; ?></td>
-                            <td><?php echo $d['no_transaksi']; ?></td>
-                            <td><?php echo $d['tgl_input']; ?></td>
-                            <td><?php echo $d['nama_barang']; ?></td>
-                            <td><?php echo $d['quantity']; ?></td>
-                            <td>Rp. <?php echo $d['harga_barang']; ?>,-</td>
-                            <td>Rp. <?php echo $d['subtotal']; ?>,-</td>
-                            <td>
-                            <a class="btn btn-danger btn-xs" href="?id=<?php echo $d['id_cart']; ?>" 
-                                onclick="javascript:return confirm('Hapus Data Barang ?');">
-                                <i class="fa fa-trash fa-xs"></i> Hapus</a>
-                            </td>
-						</tr>
-                        <?php }?>
+                        if (mysqli_num_rows($query) > 0) {
+                            while($d = mysqli_fetch_array($query)){
+                                ?>
+                            <tr>
+                                <td><?php echo $no++; ?></td>
+                                <td><span class="badge badge-primary"><?php echo htmlspecialchars($d['no_transaksi']); ?></span></td>
+                                <td><?php echo date('d/m/Y H:i', strtotime($d['created_at'])); ?></td>
+                                <td><?php echo htmlspecialchars($d['kode_barang']); ?></td>
+                                <td><?php echo htmlspecialchars($d['nama_barang']); ?></td>
+                                <td class="text-center"><?php echo $d['quantity']; ?></td>
+                                <td class="text-right">Rp <?php echo format_ribuan($d['harga_barang']); ?></td>
+                                <td class="text-right"><strong>Rp <?php echo format_ribuan($d['subtotal']); ?></strong></td>
+                                <td class="text-right text-success"><strong>Rp <?php echo format_ribuan($d['bayar']); ?></strong></td>
+                                <td class="text-right text-info">Rp <?php echo format_ribuan($d['kembalian']); ?></td>
+                            </tr>
+                            <?php 
+                            }
+                        } else {
+                            echo '<tr><td colspan="10" class="text-center text-muted py-4">
+                                    <i class="fa fa-inbox fa-3x mb-3"></i><br>
+                                    Belum ada data laporan' . ($filter_date ? ' untuk tanggal ' . date('d F Y', strtotime($filter_date)) : '') . '
+                                  </td></tr>';
+                        }
+                        ?>
 					</tbody>
                     <tfoot>
                         <tr>
-                        <th colspan="6" class="text-right"><b>TOTAL :</b></th>
-                        <th><b>Rp. <?php echo format_ribuan($tot_bayar); ?>,-</b></th>
+                        <th colspan="7" class="text-right"><b>TOTAL PENDAPATAN:</b></th>
+                        <th class="text-right"><b>Rp <?php echo format_ribuan($total_pendapatan); ?></b></th>
+                        <th></th>
                         <th></th>
                         </tr>
                     </tfoot>
@@ -71,13 +153,20 @@
 
     </div><!-- end row col-md-9 -->
   </div>
-  <?php 
-	include 'config.php';
-	if(!empty($_GET['id'])){
-		$id= $_GET['id'];
-		$hapus_data = mysqli_query($conn, "DELETE FROM laporanku WHERE id_cart ='$id'");
-		echo '<script>window.location="laporan.php"</script>';
-	}
 
-?>
+<script>
+function exportToExcel() {
+    // Simple export to Excel functionality
+    var table = document.getElementById('table');
+    var html = table.outerHTML;
+    var url = 'data:application/vnd.ms-excel,' + encodeURIComponent(html);
+    var downloadLink = document.createElement("a");
+    document.body.appendChild(downloadLink);
+    downloadLink.href = url;
+    downloadLink.download = "laporan_kasir_<?php echo date('Y-m-d'); ?>.xls";
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+}
+</script>
+
 <?php include 'template/footer.php';?>

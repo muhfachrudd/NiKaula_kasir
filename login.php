@@ -26,7 +26,7 @@
 <head>
 <link rel="icon" href="codingcenter.jpg">
     <link rel="icon" href="icon.ico" type="image/ico">
-  <title>Login</title>
+  <title>NiKaula Coffee Shop - Login</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
@@ -43,7 +43,11 @@
     <div class="col-md-5">
         <div class="card shadow">
             <div class="card-body">
-                <h1 class="h4 text-center mb-4"><b>Login Admin</b></h1>
+                <div class="text-center mb-3">
+                    <i class="fas fa-coffee fa-3x text-purple"></i>
+                    <h1 class="h4 mt-2 mb-4"><b>NiKaula Coffee Shop</b></h1>
+                    <p class="text-muted">Masuk ke sistem kasir</p>
+                </div>
                 <form method="POST">
                     <div class="form-group">
                         <input type="text" class="form-control form-control-user" name="user" placeholder="Username">
